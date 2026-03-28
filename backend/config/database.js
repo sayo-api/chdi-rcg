@@ -1,0 +1,44 @@
+const mongoose = require('mongoose');
+const bcrypt = require('bcryptjs');
+
+async function connectDB() {
+  const uri = process.env.MONGODB_URI;
+  if (!uri) {
+    console.error('❌  MONGODB_URI não definida no .env');
+    process.exit(1);
+  }
+
+  try {
+    await mongoose.connect(uri, {
+      serverSelectionTimeoutMS: 8000,
+    });
+    console.log('✅  MongoDB conectado:', mongoose.connection.host);
+    await seedAdmin();
+  } catch (err) {
+    console.error('❌  Falha ao conectar ao MongoDB:', err.message);
+    process.exit(1);
+  }
+}
+
+async function seedAdmin() {
+  const User = require('../models/User');
+  const exists = await User.findOne({ war_number: 'ADM001' });
+  if (exists) return;
+
+  const password_hash = await bcrypt.hash('admin@2024', 10);
+  await User.create({
+    war_number: 'ADM001',
+    war_name: 'COMANDANTE',
+    full_name: 'Administrador do Sistema',
+    rank: 'comandante',
+    role: 'admin',
+    password_hash,
+    first_access: false,
+  });
+
+  console.log('✅  Admin padrão criado:');
+  console.log('   Número de Guerra : ADM001');
+  console.log('   Senha            : admin@2024');
+}
+
+module.exports = { connectDB };

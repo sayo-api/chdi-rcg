@@ -69,11 +69,15 @@ exports.create = async (req, res) => {
     let parsedImages = [];
     try { if (images) parsedImages = JSON.parse(images); } catch (_) {}
 
+    // Filtra imagens sem URL (novas, ainda não enviadas ao Cloudinary)
+    // Elas serão adicionadas via POST /tutorials/:id/images logo em seguida
+    const validImages = parsedImages.filter(im => im.imageUrl && im.imageUrl.trim() !== '');
+
     const tutorial = await Tutorial.create({
       title:       title.trim(),
       description: description?.trim() || '',
       category:    categoryRef,
-      images:      parsedImages, // apenas metadados, sem imagens ainda
+      images:      validImages,
       order:       order ? parseInt(order) : 0,
       createdBy:   req.user._id,
     });
@@ -105,7 +109,13 @@ exports.update = async (req, res) => {
       }
     }
 
-    try { if (images !== undefined) updateData.images = JSON.parse(images); } catch (_) {}
+    try {
+      if (images !== undefined) {
+        const parsed = JSON.parse(images);
+        // Mantém apenas imagens que já possuem URL válida (já no Cloudinary)
+        updateData.images = parsed.filter(im => im.imageUrl && im.imageUrl.trim() !== '');
+      }
+    } catch (_) {}
 
     const tutorial = await Tutorial.findByIdAndUpdate(req.params.id, updateData, { new: true, runValidators: true })
       .populate('category', 'name icon iconColor');

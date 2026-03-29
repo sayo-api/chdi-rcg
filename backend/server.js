@@ -49,4 +49,29 @@ app.listen(PORT, () => {
   console.log(`\n🪖  SIGMIL — Sistema Militar`);
   console.log(`🌐  http://localhost:${PORT}`);
   console.log(`📡  API: http://localhost:${PORT}/api\n`);
+
+  // ─── Keep-alive: evita que o Render adormeça o serviço ───────────────────
+  const KEEP_ALIVE_URL      = 'https://anyprem.store/api/health';
+  const KEEP_ALIVE_INTERVAL = 8 * 60 * 1000; // 8 minutos em ms
+
+  if (process.env.NODE_ENV === 'production') {
+    const https = require('https');
+
+    const ping = () => {
+      https.get(KEEP_ALIVE_URL, (res) => {
+        console.log(`[keep-alive] ping → ${KEEP_ALIVE_URL} | status: ${res.statusCode}`);
+      }).on('error', (err) => {
+        console.warn(`[keep-alive] erro no ping: ${err.message}`);
+      });
+    };
+
+    // Aguarda 1 min após o boot para dar tempo ao servidor de inicializar
+    setTimeout(() => {
+      ping();
+      setInterval(ping, KEEP_ALIVE_INTERVAL);
+    }, 60 * 1000);
+
+    console.log(`🏓  Keep-alive ativo → ${KEEP_ALIVE_URL} (a cada 8 min)\n`);
+  }
+  // ─────────────────────────────────────────────────────────────────────────
 });

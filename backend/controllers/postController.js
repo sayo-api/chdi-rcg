@@ -59,7 +59,8 @@ exports.getByCategory = async (req, res) => {
   try {
     const posts = await Post.find({ category: req.params.categoryId, active: true })
       .sort({ order: 1, createdAt: -1 })
-      .select('-mediaPublicId');
+      .populate('category', 'name icon iconColor sectionLabel')
+      .select('-mediaPublicId -attachments.publicId');
     res.json({ posts });
   } catch (err) {
     res.status(500).json({ error: 'Erro ao buscar posts da categoria.' });

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Rocket, RefreshCw, CheckCircle, AlertCircle, Clock, Music, Info, Layers } from 'lucide-react';
+import { Rocket, RefreshCw, CheckCircle, AlertCircle, Clock, Music, Info, Layers, FileText } from 'lucide-react';
 import api from '../utils/api';
 
 function formatDate(dateStr) {
@@ -121,9 +121,10 @@ export default function AdminPublicar() {
             <div style={{ padding: 18 }}>
               {/* Stats */}
               <div style={{ display: 'flex', gap: 12, marginBottom: 20, flexWrap: 'wrap' }}>
-                <StatCard icon={Rocket} label="Versão Atual"     value={`v${status?.version ?? 0}`}         color="var(--accent)" />
-                <StatCard icon={Music}  label="Músicas Ativas"   value={status?.stats?.songs ?? 0}          color="#3b82f6" />
-                <StatCard icon={Layers} label="Categorias Ativas" value={status?.stats?.categories ?? 0}    color="#8b7a3a" />
+                <StatCard icon={Rocket}    label="Versão Atual"      value={`v${status?.version ?? 0}`}       color="var(--accent)" />
+                <StatCard icon={Music}     label="Músicas Ativas"    value={status?.stats?.songs ?? 0}        color="#3b82f6" />
+                <StatCard icon={Layers}    label="Categorias Ativas" value={status?.stats?.categories ?? 0}   color="#8b7a3a" />
+                <StatCard icon={FileText}  label="Posts Ativos"      value={status?.stats?.posts ?? 0}        color="#7c3aed" />
               </div>
 
               {/* Última publicação */}
@@ -214,6 +215,11 @@ export default function AdminPublicar() {
                     <Layers size={14} color="#8b7a3a" />
                     <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', fontFamily: 'var(--font-mono)' }}>{status?.stats?.categories ?? 0}</span>
                     <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>categorias ativas</span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <FileText size={14} color="#7c3aed" />
+                    <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', fontFamily: 'var(--font-mono)' }}>{status?.stats?.posts ?? 0}</span>
+                    <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>posts ativos</span>
                   </div>
                 </div>
               </div>

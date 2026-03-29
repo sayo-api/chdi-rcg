@@ -34,6 +34,7 @@ app.use('/api/categories',      require('./routes/categories'));
 app.use('/api/songs',           require('./routes/songs'));
 app.use('/api/pdfs',            require('./routes/pdfs'));
 app.use('/api/tutorials',       require('./routes/tutorials'));
+app.use('/api/posts',           require('./routes/posts'));
 app.use('/api/sync',            require('./routes/sync'));
 
 app.get('/api/health', (req, res) =>

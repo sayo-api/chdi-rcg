@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import {
   Shield, Users, LogOut, Menu, X, ChevronRight,
-  Activity, ClipboardList, BookOpen, CalendarDays, Music, Rocket, Layers, BookImage,
+  Activity, ClipboardList, BookOpen, CalendarDays, Music, Rocket, Layers, BookImage, Newspaper,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { getRankShort } from '../utils/constants';
@@ -98,6 +98,7 @@ export default function DashboardLayout({ children }) {
               { to: '/dashboard/categorias', icon: Layers,     label: 'Categorias' },
               { to: '/dashboard/musicas',    icon: Music,      label: 'Músicas do App' },
               { to: '/dashboard/tutoriais',  icon: BookImage,  label: 'Tutoriais do App' },
+              { to: '/dashboard/posts',      icon: Newspaper,  label: 'Posts do App' },
               { to: '/dashboard/publicar',   icon: Rocket,     label: 'Publicar para App' },
             ].map(({ to, icon: Icon, label, end }) => (
               <NavLink key={to} to={to} end={!!end} onClick={() => setOpen(false)}

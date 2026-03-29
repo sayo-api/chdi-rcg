@@ -12,6 +12,7 @@ import EscalaPage       from './pages/EscalaPage';
 import AdminMusicas     from './pages/AdminMusicas';
 import AdminCategorias  from './pages/AdminCategorias';
 import AdminPublicar    from './pages/AdminPublicar';
+import AdminTutoriais   from './pages/AdminTutoriais';
 
 function Loader() {
   return (
@@ -85,6 +86,9 @@ export default function App() {
           } />
           <Route path="/dashboard/publicar" element={
             <Wrap><AdminRoute><AdminPublicar /></AdminRoute></Wrap>
+          } />
+          <Route path="/dashboard/tutoriais" element={
+            <Wrap><AdminRoute><AdminTutoriais /></AdminRoute></Wrap>
           } />
 
           <Route path="/"  element={<Navigate to="/login" replace />} />

@@ -614,12 +614,13 @@ function PostCard({ post, onEdit, onDelete, onToggle }) {
 // ─── Main page ────────────────────────────────────────────────────────────────
 
 export default function AdminPosts() {
-  const [posts,      setPosts]      = useState([]);
-  const [categories, setCategories] = useState([]);
-  const [loading,    setLoading]    = useState(true);
-  const [search,     setSearch]     = useState('');
-  const [filterType, setFilterType] = useState('');
-  const [modalPost,  setModalPost]  = useState(undefined);
+  const [posts,           setPosts]           = useState([]);
+  const [categories,      setCategories]      = useState([]);
+  const [loading,         setLoading]         = useState(true);
+  const [search,          setSearch]          = useState('');
+  const [filterType,      setFilterType]      = useState('');
+  const [groupByCategory, setGroupByCategory] = useState(false);
+  const [modalPost,       setModalPost]       = useState(undefined);
   const { toasts, show } = useToast();
 
   const fetchAll = useCallback(async () => {
@@ -667,6 +668,23 @@ export default function AdminPosts() {
       && (!filterType || p.type === filterType);
   });
 
+  // Agrupamento por categoria para visualização "múltiplos cards por categoria"
+  const groupedByCategory = React.useMemo(() => {
+    const groups = [];
+    const catMap = {};
+    filtered.forEach(p => {
+      const catId   = p.category?._id  || '__sem_categoria__';
+      const catName = p.category?.name || 'Sem Categoria';
+      if (!catMap[catId]) { catMap[catId] = { catId, catName, posts: [] }; groups.push(catMap[catId]); }
+      catMap[catId].posts.push(p);
+    });
+    return groups.sort((a, b) => {
+      if (a.catId === '__sem_categoria__') return 1;
+      if (b.catId === '__sem_categoria__') return -1;
+      return a.catName.localeCompare(b.catName);
+    });
+  }, [filtered]);
+
   const stats = {
     total:    posts.length,
     active:   posts.filter(p => p.active).length,
@@ -691,6 +709,10 @@ export default function AdminPosts() {
             </p>
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
+            <button onClick={() => setGroupByCategory(g => !g)} className={groupByCategory ? 'btn btn-primary' : 'btn btn-ghost'}
+              title="Agrupar por Categoria" style={{ gap: 6, fontSize: 12 }}>
+              <Layers size={14} /> {groupByCategory ? 'Por Categoria' : 'Agrupar'}
+            </button>
             <button onClick={fetchAll} className="btn btn-ghost" title="Recarregar" style={{ gap: 6 }}>
               <RefreshCw size={14} />
             </button>
@@ -744,7 +766,48 @@ export default function AdminPosts() {
             </button>
           )}
         </div>
+      ) : groupByCategory ? (
+        /* ── Vista agrupada por categoria ── */
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+          {groupedByCategory.map(group => (
+            <div key={group.catId}>
+              {/* Cabeçalho da categoria */}
+              <div style={{
+                display: 'flex', alignItems: 'center', gap: 10,
+                marginBottom: 10, paddingBottom: 8,
+                borderBottom: '2px solid var(--accent)',
+              }}>
+                <div style={{
+                  width: 8, height: 8, borderRadius: '50%',
+                  background: group.catId === '__sem_categoria__' ? 'var(--text-muted)' : 'var(--accent)',
+                  flexShrink: 0,
+                }} />
+                <span style={{ fontFamily: 'var(--font-display)', fontSize: 15, letterSpacing: '0.08em' }}>
+                  {group.catName}
+                </span>
+                <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--text-muted)',
+                  background: 'var(--bg-secondary)', border: '1px solid var(--border)',
+                  borderRadius: 10, padding: '2px 8px', marginLeft: 4 }}>
+                  {group.posts.length} card{group.posts.length !== 1 ? 's' : ''}
+                </span>
+              </div>
+              {/* Posts desta categoria */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8, paddingLeft: 18 }}>
+                {group.posts.map(post => (
+                  <PostCard key={post._id} post={post}
+                    onEdit={() => setModalPost(post)}
+                    onDelete={() => handleDelete(post)}
+                    onToggle={() => handleToggle(post)} />
+                ))}
+              </div>
+            </div>
+          ))}
+          <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--text-muted)', textAlign: 'center', padding: '8px 0' }}>
+            {filtered.length} post{filtered.length !== 1 ? 's' : ''} em {groupedByCategory.length} categoria{groupedByCategory.length !== 1 ? 's' : ''}
+          </div>
+        </div>
       ) : (
+        /* ── Vista flat padrão ── */
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {filtered.map(post => (
             <PostCard key={post._id} post={post}

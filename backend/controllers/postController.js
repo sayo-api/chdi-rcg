@@ -1,6 +1,16 @@
-const Post     = require('../models/Post');
-const Category = require('../models/Category');
+const Post        = require('../models/Post');
+const Category    = require('../models/Category');
+const SyncVersion = require('../models/SyncVersion');
 const { cloudinary, uploadBuffer } = require('../config/cloudinary');
+
+async function incrementSyncVersion() {
+  let doc = await SyncVersion.findOne();
+  if (!doc) doc = new SyncVersion({ version: 0 });
+  doc.version    += 1;
+  doc.publishedAt = new Date();
+  doc.publishedBy = 'system';
+  await doc.save();
+}
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -109,6 +119,7 @@ exports.create = async (req, res) => {
       createdBy: req.user._id,
     });
 
+    await incrementSyncVersion();
     res.status(201).json({ message: 'Post criado. Envie mídias se necessário.', post });
   } catch (err) {
     console.error(err);
@@ -140,6 +151,7 @@ exports.update = async (req, res) => {
       .populate('category', 'name icon iconColor');
     if (!post) return res.status(404).json({ error: 'Post não encontrado.' });
 
+    await incrementSyncVersion();
     res.json({ message: 'Post atualizado.', post });
   } catch (err) {
     console.error(err);
@@ -172,6 +184,7 @@ exports.remove = async (req, res) => {
     }
 
     await post.deleteOne();
+    await incrementSyncVersion();
     res.json({ message: 'Post removido.' });
   } catch (err) {
     res.status(500).json({ error: 'Erro ao remover post.' });

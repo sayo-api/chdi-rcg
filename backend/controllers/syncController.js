@@ -1,6 +1,7 @@
 const SyncVersion = require('../models/SyncVersion');
 const Song        = require('../models/Song');
 const Category    = require('../models/Category');
+const Post        = require('../models/Post');
 
 /**
  * GET /api/sync/status
@@ -14,9 +15,10 @@ exports.getStatus = async (req, res) => {
       syncDoc = await SyncVersion.create({ version: 0, publishedAt: new Date(), note: 'Versão inicial' });
     }
 
-    const [songCount, catCount] = await Promise.all([
+    const [songCount, catCount, postCount] = await Promise.all([
       Song.countDocuments({ active: true }).catch(() => Song.countDocuments()),
       Category.countDocuments({ active: true }).catch(() => Category.countDocuments()),
+      Post.countDocuments({ active: true }),
     ]);
 
     res.json({
@@ -24,7 +26,7 @@ exports.getStatus = async (req, res) => {
       publishedAt: syncDoc.publishedAt,
       publishedBy: syncDoc.publishedBy,
       note:        syncDoc.note,
-      stats:       { songs: songCount, categories: catCount },
+      stats:       { songs: songCount, categories: catCount, posts: postCount },
     });
   } catch (err) {
     console.error(err);
@@ -52,9 +54,10 @@ exports.publish = async (req, res) => {
     syncDoc.note        = note;
     await syncDoc.save();
 
-    const [songCount, catCount] = await Promise.all([
+    const [songCount, catCount, postCount] = await Promise.all([
       Song.countDocuments({ active: true }).catch(() => Song.countDocuments()),
       Category.countDocuments({ active: true }).catch(() => Category.countDocuments()),
+      Post.countDocuments({ active: true }),
     ]);
 
     res.json({
@@ -63,7 +66,7 @@ exports.publish = async (req, res) => {
       publishedAt: syncDoc.publishedAt,
       publishedBy: syncDoc.publishedBy,
       note:        syncDoc.note,
-      stats:       { songs: songCount, categories: catCount },
+      stats:       { songs: songCount, categories: catCount, posts: postCount },
     });
   } catch (err) {
     console.error(err);

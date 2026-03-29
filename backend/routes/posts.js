@@ -36,12 +36,14 @@ const uploadAny = multer({
 // ─── Rotas públicas (app mobile) ──────────────────────────────────────────────
 router.get('/',                          ctrl.getAll);
 router.get('/category/:categoryId',      ctrl.getByCategory);
+
+// ─── Rota admin estática DEVE vir antes de /:id para não ser capturada como parâmetro ─
+router.get('/admin/all',                 authMiddleware, adminMiddleware, ctrl.getAllAdmin);
+
 router.get('/:id',                       ctrl.getOne);
 
 // ─── Rotas admin ──────────────────────────────────────────────────────────────
 router.use(authMiddleware, adminMiddleware);
-
-router.get('/admin/all',                 ctrl.getAllAdmin);
 router.post('/',                         ctrl.create);
 router.put('/:id',                       ctrl.update);
 router.delete('/:id',                    ctrl.remove);

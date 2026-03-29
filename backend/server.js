@@ -32,6 +32,7 @@ app.use('/api/scale',           require('./routes/scale'));
 app.use('/api/scale-export',    require('./routes/scale-export'));
 app.use('/api/categories',      require('./routes/categories'));
 app.use('/api/songs',           require('./routes/songs'));
+app.use('/api/pdfs',            require('./routes/pdfs'));
 app.use('/api/sync',            require('./routes/sync'));
 
 app.get('/api/health', (req, res) =>

@@ -45,6 +45,22 @@ const uploadImage = multer({
   },
 });
 
+// Upload de PDF (raw resource_type no Cloudinary) — até 100 MB
+const uploadPdf = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 100 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    if (
+      file.mimetype === 'application/pdf' ||
+      /\.pdf$/i.test(file.originalname)
+    ) {
+      cb(null, true);
+    } else {
+      cb(new Error('Apenas arquivos PDF'));
+    }
+  },
+});
+
 function uploadBuffer(buffer, options = {}) {
   return new Promise((resolve, reject) => {
     const stream = cloudinary.uploader.upload_stream(options, (err, result) => {
@@ -55,4 +71,4 @@ function uploadBuffer(buffer, options = {}) {
   });
 }
 
-module.exports = { cloudinary, uploadAudio, uploadMedia, uploadImage, uploadBuffer };
+module.exports = { cloudinary, uploadAudio, uploadMedia, uploadImage, uploadPdf, uploadBuffer };

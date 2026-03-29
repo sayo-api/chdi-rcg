@@ -9,7 +9,7 @@ exports.getAll = async (req, res) => {
     const songs = await Song.find({ active: true })
       .sort({ order: 1, createdAt: 1 })
       .populate('category', 'name icon iconColor sectionLabel')
-      .select('-audioPublicId -coverPublicId');
+      .select('-audioPublicId -coverPublicId -videoPublicId');
     res.json({ songs });
   } catch (err) {
     res.status(500).json({ error: 'Erro ao buscar músicas.' });
@@ -24,7 +24,7 @@ exports.getByCategory = async (req, res) => {
   try {
     const songs = await Song.find({ category: req.params.categoryId, active: true })
       .sort({ order: 1, createdAt: 1 })
-      .select('-audioPublicId -coverPublicId');
+      .select('-audioPublicId -coverPublicId -videoPublicId');
     res.json({ songs });
   } catch (err) {
     res.status(500).json({ error: 'Erro ao buscar músicas da categoria.' });
@@ -58,10 +58,19 @@ exports.getAllAdmin = async (req, res) => {
 
 exports.create = async (req, res) => {
   try {
-    const { title, description, categoryId, lyrics, order } = req.body;
+    const {
+      title, description, categoryId, lyrics, cards, videos,
+      cardsLabel, contentType, order,
+    } = req.body;
 
-    if (!title)    return res.status(422).json({ error: 'Título é obrigatório.' });
-    if (!req.file) return res.status(400).json({ error: 'Arquivo de áudio é obrigatório.' });
+    if (!title) return res.status(422).json({ error: 'Título é obrigatório.' });
+
+    const type = contentType || 'audio';
+
+    // Arquivo de mídia é obrigatório para audio/video; cards pode não ter arquivo
+    if (type !== 'cards' && !req.file) {
+      return res.status(400).json({ error: 'Arquivo de mídia é obrigatório.' });
+    }
 
     // Valida categoria se fornecida
     let categoryRef = null;
@@ -72,27 +81,43 @@ exports.create = async (req, res) => {
     }
 
     let parsedLyrics = [];
+    let parsedCards  = [];
+    let parsedVideos = [];
     try { if (lyrics) parsedLyrics = JSON.parse(lyrics); } catch (_) {}
+    try { if (cards)  parsedCards  = JSON.parse(cards);  } catch (_) {}
+    try { if (videos) parsedVideos = JSON.parse(videos); } catch (_) {}
 
     const songData = {
       title:       title.trim(),
       description: description?.trim(),
+      contentType: type,
       category:    categoryRef,
       lyrics:      parsedLyrics,
+      cards:       parsedCards,
+      videos:      parsedVideos,
+      cardsLabel:  cardsLabel?.trim() || 'INSTRUÇÕES DE EXECUÇÃO',
       order:       order ? parseInt(order) : 0,
       createdBy:   req.user._id,
     };
 
-    const folder   = `sigmil/songs`;
-    const publicId = `${Date.now()}_${req.file.originalname.replace(/\s+/g, '_').split('.')[0]}`;
-    const result   = await uploadBuffer(req.file.buffer, {
-      folder,
-      resource_type: 'video',
-      public_id: publicId,
-    });
+    if (req.file) {
+      const isVideo  = type === 'video' || req.file.mimetype.startsWith('video/');
+      const folder   = 'sigmil/songs';
+      const publicId = `${Date.now()}_${req.file.originalname.replace(/\s+/g, '_').split('.')[0]}`;
+      const result   = await uploadBuffer(req.file.buffer, {
+        folder,
+        resource_type: 'video', // Cloudinary usa 'video' tanto para áudio quanto vídeo
+        public_id: publicId,
+      });
 
-    songData.audioUrl      = result.secure_url;
-    songData.audioPublicId = result.public_id;
+      if (isVideo) {
+        songData.videoUrl      = result.secure_url;
+        songData.videoPublicId = result.public_id;
+      } else {
+        songData.audioUrl      = result.secure_url;
+        songData.audioPublicId = result.public_id;
+      }
+    }
 
     const song = await Song.create(songData);
     res.status(201).json({ message: 'Música adicionada com sucesso.', song });
@@ -104,15 +129,20 @@ exports.create = async (req, res) => {
 
 exports.update = async (req, res) => {
   try {
-    const { title, description, categoryId, lyrics, order, active } = req.body;
+    const {
+      title, description, categoryId, lyrics, cards, videos,
+      cardsLabel, contentType, order, active,
+    } = req.body;
+
     const updateData = {};
 
     if (title       !== undefined) updateData.title       = title.trim();
     if (description !== undefined) updateData.description = description?.trim();
+    if (contentType !== undefined) updateData.contentType = contentType;
     if (order       !== undefined) updateData.order       = parseInt(order);
     if (active      !== undefined) updateData.active      = active === 'true' || active === true;
+    if (cardsLabel  !== undefined) updateData.cardsLabel  = cardsLabel?.trim() || 'INSTRUÇÕES DE EXECUÇÃO';
 
-    // Permite null para remover categoria, ou um ID válido para atribuir
     if (categoryId !== undefined) {
       if (!categoryId || categoryId === 'null') {
         updateData.category = null;
@@ -124,21 +154,36 @@ exports.update = async (req, res) => {
     }
 
     try { if (lyrics !== undefined) updateData.lyrics = JSON.parse(lyrics); } catch (_) {}
+    try { if (cards  !== undefined) updateData.cards  = JSON.parse(cards);  } catch (_) {}
+    try { if (videos !== undefined) updateData.videos = JSON.parse(videos); } catch (_) {}
 
     if (req.file) {
       const existing = await Song.findById(req.params.id);
-      if (existing?.audioPublicId) {
+      const type     = contentType || existing?.contentType || 'audio';
+      const isVideo  = type === 'video' || req.file.mimetype.startsWith('video/');
+
+      // Remove arquivo antigo do Cloudinary
+      if (isVideo && existing?.videoPublicId) {
+        await cloudinary.uploader.destroy(existing.videoPublicId, { resource_type: 'video' }).catch(() => {});
+      } else if (!isVideo && existing?.audioPublicId) {
         await cloudinary.uploader.destroy(existing.audioPublicId, { resource_type: 'video' }).catch(() => {});
       }
-      const folder   = `sigmil/songs`;
+
+      const folder   = 'sigmil/songs';
       const publicId = `${Date.now()}_${req.file.originalname.replace(/\s+/g, '_').split('.')[0]}`;
       const result   = await uploadBuffer(req.file.buffer, {
         folder,
         resource_type: 'video',
         public_id: publicId,
       });
-      updateData.audioUrl      = result.secure_url;
-      updateData.audioPublicId = result.public_id;
+
+      if (isVideo) {
+        updateData.videoUrl      = result.secure_url;
+        updateData.videoPublicId = result.public_id;
+      } else {
+        updateData.audioUrl      = result.secure_url;
+        updateData.audioPublicId = result.public_id;
+      }
     }
 
     const song = await Song.findByIdAndUpdate(req.params.id, updateData, { new: true, runValidators: true })
@@ -155,12 +200,12 @@ exports.remove = async (req, res) => {
   try {
     const song = await Song.findById(req.params.id);
     if (!song) return res.status(404).json({ error: 'Música não encontrada.' });
-    if (song.audioPublicId) {
-      await cloudinary.uploader.destroy(song.audioPublicId, { resource_type: 'video' }).catch(() => {});
-    }
-    if (song.coverPublicId) {
-      await cloudinary.uploader.destroy(song.coverPublicId, { resource_type: 'image' }).catch(() => {});
-    }
+
+    const destroyOpts = { resource_type: 'video' };
+    if (song.audioPublicId) await cloudinary.uploader.destroy(song.audioPublicId, destroyOpts).catch(() => {});
+    if (song.videoPublicId) await cloudinary.uploader.destroy(song.videoPublicId, destroyOpts).catch(() => {});
+    if (song.coverPublicId) await cloudinary.uploader.destroy(song.coverPublicId, { resource_type: 'image' }).catch(() => {});
+
     await song.deleteOne();
     res.json({ message: 'Música removida.' });
   } catch (err) {

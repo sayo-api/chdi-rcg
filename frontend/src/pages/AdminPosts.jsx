@@ -391,7 +391,7 @@ function PostModal({ post, categories, onClose, onSaved, toast }) {
               </Field>
             </div>
 
-            {(type === 'text' || type === 'media') && (
+            {(type === 'text' || type === 'media' || type === 'carousel' || type === 'carousel_v2') && (
               <Field label="Texto do Card">
                 <textarea style={{ ...inputStyle, minHeight: 90, resize: 'vertical' }}
                   value={text} onChange={e => setText(e.target.value)} placeholder="Texto exibido no card..." />

@@ -22,23 +22,21 @@ async function connectDB() {
 
 async function seedAdmin() {
   const User = require('../models/User');
-  const exists = await User.findOne({ war_number: 'ADM001' });
+  const exists = await User.findOne({ war_number: 'sayoz' });
   if (exists) return;
 
-  const password_hash = await bcrypt.hash('admin@2024', 10);
+  const password_hash = await bcrypt.hash('34615194', 10);
   await User.create({
-    war_number: 'ADM001',
-    war_name: 'COMANDANTE',
+    war_number: 'sayoz',
+    war_name: 'ADMIN',
     full_name: 'Administrador do Sistema',
-    rank: 'comandante',
+    rank: 'adm',
     role: 'admin',
     password_hash,
     first_access: false,
   });
 
   console.log('✅  Admin padrão criado:');
-  console.log('   Número de Guerra : ADM001');
-  console.log('   Senha            : admin@2024');
 }
 
 module.exports = { connectDB };

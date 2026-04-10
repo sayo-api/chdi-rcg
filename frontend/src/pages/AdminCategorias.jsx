@@ -333,7 +333,7 @@ export default function AdminCategorias() {
   useEffect(() => { load(); }, []);
 
   const handleDelete = async (cat) => {
-    if (!window.confirm(`Remover a categoria "${cat.name}"?\n\nSe houver músicas vinculadas, não será possível remover.`)) return;
+    if (!window.confirm(`Remover a categoria "${cat.name}"?\n\nSe houver músicas, PDFs, tutoriais ou posts vinculados, não será possível remover.`)) return;
     try {
       await api.delete(`/categories/${cat._id}`);
       showToast('Categoria removida com sucesso.');
@@ -418,8 +418,8 @@ export default function AdminCategorias() {
           {/* Tabela de gerenciamento */}
           <div style={{ background: 'var(--bg-panel)', border: '1px solid var(--border)', borderRadius: 12, overflow: 'hidden' }}>
             {/* Header */}
-            <div style={{ display: 'grid', gridTemplateColumns: '52px 1fr 180px 80px 70px 130px', gap: 12, padding: '10px 16px', background: 'var(--bg-secondary)', borderBottom: '1px solid var(--border)' }}>
-              {['Ícone', 'Nome / Seção', 'Descrição', 'Músicas', 'Ordem', 'Ações'].map(h => (
+            <div style={{ display: 'grid', gridTemplateColumns: '52px 1fr 180px 160px 70px 130px', gap: 12, padding: '10px 16px', background: 'var(--bg-secondary)', borderBottom: '1px solid var(--border)' }}>
+              {['Ícone', 'Nome / Seção', 'Descrição', 'Conteúdo', 'Ordem', 'Ações'].map(h => (
                 <div key={h} style={{ fontFamily: 'var(--font-mono)', fontSize: 10, fontWeight: 700, color: 'var(--text-muted)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
                   {h}
                 </div>
@@ -432,7 +432,7 @@ export default function AdminCategorias() {
               return (
                 <div key={cat._id}
                   style={{
-                    display: 'grid', gridTemplateColumns: '52px 1fr 180px 80px 70px 130px',
+                    display: 'grid', gridTemplateColumns: '52px 1fr 180px 160px 70px 130px',
                     gap: 12, padding: '13px 16px', alignItems: 'center',
                     borderBottom: idx < categorias.length - 1 ? '1px solid var(--border)' : 'none',
                     transition: 'background 0.15s',
@@ -459,10 +459,25 @@ export default function AdminCategorias() {
                     {cat.description || <span style={{ fontStyle: 'italic' }}>—</span>}
                   </div>
 
-                  {/* Contagem músicas */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                    <Music size={13} color={hex} />
-                    <span style={{ fontFamily: 'var(--font-mono)', fontSize: 14, fontWeight: 700, color: hex }}>{cat.songCount ?? 0}</span>
+                  {/* Contagem de conteúdo por tipo */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                    {[
+                      { icon: <Music size={11} />, count: cat.songCount ?? 0, label: 'músicas' },
+                      { icon: <FileText size={11} />, count: cat.pdfCount ?? 0, label: 'PDFs' },
+                      { icon: <Layers size={11} />, count: cat.tutorialCount ?? 0, label: 'tutoriais' },
+                      { icon: <Bell size={11} />, count: cat.postCount ?? 0, label: 'posts' },
+                    ].map(({ icon, count, label }) => (
+                      <span key={label} title={`${count} ${label}`} style={{
+                        display: 'inline-flex', alignItems: 'center', gap: 3,
+                        padding: '2px 6px', borderRadius: 5,
+                        background: count > 0 ? `${hex}18` : 'var(--bg-secondary)',
+                        border: `1px solid ${count > 0 ? `${hex}35` : 'var(--border)'}`,
+                        color: count > 0 ? hex : 'var(--text-muted)',
+                        fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: count > 0 ? 700 : 400,
+                      }}>
+                        {icon}{count}
+                      </span>
+                    ))}
                   </div>
 
                   {/* Ordem */}

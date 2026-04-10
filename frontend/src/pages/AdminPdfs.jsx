@@ -363,14 +363,22 @@ export default function AdminPdfs() {
 
   const load = async () => {
     setLoading(true);
+
+    // Carrega categorias separadamente — falha de PDFs não deve bloquear o select
     try {
-      const [pr, cr] = await Promise.all([
-        api.get('/api/pdfs/admin/all'),
-        api.get('/api/categories/admin/all'),
-      ]);
+      const cr = await api.get('/api/categories/admin/list', { timeout: 30000 });
+      setCategorias(cr.data.categories || []);
+    } catch (e) {
+      console.error('Erro ao carregar categorias:', e);
+    }
+
+    try {
+      const pr = await api.get('/api/pdfs/admin/all', { timeout: 30000 });
       setPdfs(pr.data.pdfs || []);
-      setCategorias(cr.data.categories || cr.data.cats || []);
-    } catch (_) {}
+    } catch (e) {
+      console.error('Erro ao carregar PDFs:', e);
+    }
+
     setLoading(false);
   };
 

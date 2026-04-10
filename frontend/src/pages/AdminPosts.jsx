@@ -628,7 +628,7 @@ export default function AdminPosts() {
     try {
       const [pr, cr] = await Promise.all([
         api.get('/posts/admin/all'),
-        api.get('/categories'),
+        api.get('/categories/admin/list'),
       ]);
       setPosts(pr.data.posts || []);
       setCategories(cr.data.categories || []);

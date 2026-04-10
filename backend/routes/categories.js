@@ -7,7 +7,8 @@ const ctrl = require('../controllers/categoryController');
 router.get('/', ctrl.getAll);
 
 // ─── Admin ────────────────────────────────────────────────────────────────────
-router.get('/admin/all', authMiddleware, adminMiddleware, ctrl.getAllAdmin);
+router.get('/admin/all',  authMiddleware, adminMiddleware, ctrl.getAllAdmin);
+router.get('/admin/list', authMiddleware, adminMiddleware, ctrl.getList);
 router.post('/',         authMiddleware, adminMiddleware, ctrl.create);
 router.put('/:id',       authMiddleware, adminMiddleware, ctrl.update);
 router.delete('/:id',    authMiddleware, adminMiddleware, ctrl.remove);

@@ -146,3 +146,20 @@ exports.remove = async (req, res) => {
     res.status(500).json({ error: 'Erro ao remover categoria.' });
   }
 };
+
+/**
+ * GET /api/categories/admin/list
+ * Lista simples de categorias para selects/dropdowns do admin.
+ * Retorna todas (ativas e inativas) sem fazer contagens — resposta rápida.
+ */
+exports.getList = async (req, res) => {
+  try {
+    const categories = await Category.find()
+      .sort({ order: 1, name: 1 })
+      .select('name icon iconColor active order');
+    res.json({ categories });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Erro ao buscar categorias.' });
+  }
+};

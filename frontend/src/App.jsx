@@ -14,6 +14,7 @@ import AdminCategorias  from './pages/AdminCategorias';
 import AdminPublicar    from './pages/AdminPublicar';
 import AdminTutoriais   from './pages/AdminTutoriais';
 import AdminPosts        from './pages/AdminPosts';
+import AdminPdfs         from './pages/AdminPdfs';
 
 function Loader() {
   return (
@@ -93,6 +94,9 @@ export default function App() {
           } />
           <Route path="/dashboard/posts" element={
             <Wrap><AdminRoute><AdminPosts /></AdminRoute></Wrap>
+          } />
+          <Route path="/dashboard/pdfs" element={
+            <Wrap><AdminRoute><AdminPdfs /></AdminRoute></Wrap>
           } />
 
           <Route path="/"  element={<Navigate to="/login" replace />} />

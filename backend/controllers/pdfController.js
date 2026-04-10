@@ -1,6 +1,31 @@
 const Pdf      = require('../models/Pdf');
 const Category = require('../models/Category');
 const { cloudinary, uploadBuffer } = require('../config/cloudinary');
+const pdfParse = require('pdf-parse');
+
+// Extrai texto por página de um buffer PDF
+async function extractPagesText(buffer) {
+  const pages = [];
+  try {
+    const options = {
+      pagerender: async (pageData) => {
+        try {
+          const textContent = await pageData.getTextContent();
+          const text = (textContent.items || []).map(i => i.str || '').join(' ').replace(/\s+/g, ' ').trim();
+          pages.push(text);
+          return text;
+        } catch (_) {
+          pages.push('');
+          return '';
+        }
+      }
+    };
+    await pdfParse(buffer, options);
+  } catch (e) {
+    // pdf-parse pode falhar em PDFs protegidos; silencia o erro
+  }
+  return pages;
+}
 
 // ─── Público (app mobile) ─────────────────────────────────────────────────────
 
@@ -92,6 +117,9 @@ exports.create = async (req, res) => {
       format: 'pdf',
     });
 
+    // Extrai texto por página para busca no app
+    const pagesText = await extractPagesText(req.file.buffer);
+
     const pdf = await Pdf.create({
       title:       title.trim(),
       subtitle:    subtitle?.trim() || '',
@@ -100,6 +128,8 @@ exports.create = async (req, res) => {
       pdfUrl:      result.secure_url,
       pdfPublicId: result.public_id,
       fileSize:    req.file.size,
+      pageCount:   pagesText.length || 0,
+      pagesText,
       cardsLabel:  cardsLabel?.trim() || 'NOTAS DE INSTRUÇÃO',
       cards:       parsedCards,
       order:       order ? parseInt(order) : 0,
@@ -154,6 +184,9 @@ exports.update = async (req, res) => {
       updateData.pdfUrl      = result.secure_url;
       updateData.pdfPublicId = result.public_id;
       updateData.fileSize    = req.file.size;
+      const pagesText = await extractPagesText(req.file.buffer);
+      updateData.pagesText  = pagesText;
+      updateData.pageCount  = pagesText.length || 0;
     }
 
     const pdf = await Pdf.findByIdAndUpdate(req.params.id, updateData, { new: true, runValidators: true })

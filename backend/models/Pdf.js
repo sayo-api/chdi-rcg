@@ -30,6 +30,9 @@ const pdfSchema = new mongoose.Schema({
   pageCount: { type: Number, default: 0 },
   fileSize:  { type: Number, default: 0 }, // bytes
 
+  // Texto extraído por página para busca no app
+  pagesText: { type: [String], default: [] },
+
   // Cards de notas de instrução
   cards:      { type: [cardSchema], default: [] },
   cardsLabel: { type: String, default: 'NOTAS DE INSTRUÇÃO' },

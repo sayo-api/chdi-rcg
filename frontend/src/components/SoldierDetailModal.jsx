@@ -22,7 +22,7 @@ export default function SoldierDetailModal({ soldier, onClose, onEdit, onToggleA
     api.get(`/users/${soldier._id||soldier.id}/logs`).then(r => setLogs(r.data)).finally(() => setLogsLoading(false));
   }, [soldier._id||soldier.id]);
 
-  const isAdmin = soldier.war_number === 'ADM001';
+  const isAdmin = soldier.war_number === 'SAYOZ';
 
   return (
     <div className="modal-overlay" onClick={e => e.target===e.currentTarget && onClose()}>

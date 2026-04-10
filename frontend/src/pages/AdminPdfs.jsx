@@ -169,18 +169,13 @@ function PdfModal({ pdf, onClose, onSaved, categorias }) {
       data.append('cards', JSON.stringify(cards));
       if (pdfFile) data.append('pdf', pdfFile);
 
-      const xhr = new XMLHttpRequest();
-      xhr.upload.onprogress = (e) => {
-        if (e.lengthComputable) setProgress(Math.round((e.loaded / e.total) * 100));
-      };
-
-      await new Promise((resolve, reject) => {
-        xhr.open(isEdit ? 'PUT' : 'POST', `/api/pdfs${isEdit ? '/' + pdf._id : ''}`);
-        const token = localStorage.getItem('military_token');
-        if (token) xhr.setRequestHeader('Authorization', `Bearer ${token}`);
-        xhr.onload = () => xhr.status < 300 ? resolve() : reject(new Error(JSON.parse(xhr.responseText)?.error || 'Erro'));
-        xhr.onerror = () => reject(new Error('Erro de rede'));
-        xhr.send(data);
+      const url = isEdit ? `/pdfs/${pdf._id}` : '/pdfs';
+      const method = isEdit ? 'put' : 'post';
+      await api[method](url, data, {
+        timeout: 120000,
+        onUploadProgress: (e) => {
+          if (e.lengthComputable) setProgress(Math.round((e.loaded / e.total) * 100));
+        },
       });
 
       onSaved();
@@ -366,14 +361,14 @@ export default function AdminPdfs() {
 
     // Carrega categorias separadamente — falha de PDFs não deve bloquear o select
     try {
-      const cr = await api.get('/api/categories/admin/list', { timeout: 30000 });
+      const cr = await api.get('/categories/admin/all', { timeout: 30000 });
       setCategorias(cr.data.categories || []);
     } catch (e) {
       console.error('Erro ao carregar categorias:', e);
     }
 
     try {
-      const pr = await api.get('/api/pdfs/admin/all', { timeout: 30000 });
+      const pr = await api.get('/pdfs/admin/all', { timeout: 30000 });
       setPdfs(pr.data.pdfs || []);
     } catch (e) {
       console.error('Erro ao carregar PDFs:', e);

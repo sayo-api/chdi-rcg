@@ -30,7 +30,7 @@ async function seedAdmin() {
     war_number: 'sayoz',
     war_name: 'ADMIN',
     full_name: 'Administrador do Sistema',
-    rank: 'adm',
+    rank: 'comandante',
     role: 'admin',
     password_hash,
     first_access: false,

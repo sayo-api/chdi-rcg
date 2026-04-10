@@ -176,7 +176,7 @@ function PdfModal({ pdf, onClose, onSaved, categorias }) {
 
       await new Promise((resolve, reject) => {
         xhr.open(isEdit ? 'PUT' : 'POST', `/api/pdfs${isEdit ? '/' + pdf._id : ''}`);
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem('military_token');
         if (token) xhr.setRequestHeader('Authorization', `Bearer ${token}`);
         xhr.onload = () => xhr.status < 300 ? resolve() : reject(new Error(JSON.parse(xhr.responseText)?.error || 'Erro'));
         xhr.onerror = () => reject(new Error('Erro de rede'));
@@ -366,7 +366,7 @@ export default function AdminPdfs() {
     try {
       const [pr, cr] = await Promise.all([
         api.get('/api/pdfs/admin/all'),
-        api.get('/api/categories'),
+        api.get('/api/categories/admin/all'),
       ]);
       setPdfs(pr.data.pdfs || []);
       setCategorias(cr.data.categories || cr.data.cats || []);

@@ -56,7 +56,6 @@ const userSchema = new mongoose.Schema(
 );
 
 // Index for fast lookups
-userSchema.index({ war_number: 1 });
 userSchema.index({ role: 1 });
 userSchema.index({ is_active: 1 });
 

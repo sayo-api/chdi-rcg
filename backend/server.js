@@ -8,6 +8,10 @@ const { connectDB } = require('./config/database');
 const app  = express();
 const PORT = process.env.PORT || 5000;
 
+// Render sits behind a reverse proxy — trust the first hop so that
+// X-Forwarded-For is read correctly by express-rate-limit.
+app.set('trust proxy', 1);
+
 connectDB();
 
 const limiter      = rateLimit({ windowMs: 15 * 60 * 1000, max: 200 });

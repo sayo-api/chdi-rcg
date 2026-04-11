@@ -115,6 +115,8 @@ exports.create = async (req, res) => {
       resource_type: 'raw',
       public_id: publicId,
       format: 'pdf',
+      type: 'upload',
+      access_mode: 'public',
     });
 
     // Extrai texto por página para busca no app
@@ -180,6 +182,8 @@ exports.update = async (req, res) => {
         resource_type: 'raw',
         public_id: publicId,
         format: 'pdf',
+        type: 'upload',
+        access_mode: 'public',
       });
       updateData.pdfUrl      = result.secure_url;
       updateData.pdfPublicId = result.public_id;
